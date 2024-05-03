@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 19:50:33 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/02 19:54:46 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/03 22:51:36 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,12 +41,18 @@ int	ft_atoi(char *str)
 }
 
 
-int get_philo_args(t_data *philo, int *condition, int ids, char **av)
+int get_philo_args(t_philos *philo, int *condition, int ids, char **av)
 {
-	philo->id = ids;
-	philo->t_die = ft_atoi(av[0]);
-	philo->t_eat = ft_atoi(av[1]);
-	philo->t_sleep = ft_atoi(av[2]);
+	philo->philos[ids - 1].id = ids;
+	philo->philos[ids - 1].t_die = ft_atoi(av[0]);
+	philo->philos[ids - 1].t_eat = ft_atoi(av[1]);
+	philo->philos[ids - 1].t_sleep = ft_atoi(av[2]);
+	philo->philos[ids - 1].fork_mine = 1;
+	// if conditiion
+	if (philo->total_philos < ids)
+		philo->philos[ids - 1].fork_available = &philo->philos[ids].fork_mine;
+	else
+		philo->philos[ids - 1].fork_available = &philo->philos[0].fork_mine;
 	*condition = -1;
 	if (av[3])
 		*condition = ft_atoi(av[3]);
@@ -67,7 +73,7 @@ int	get_philos_data(t_philos *philo, char **av)
 		return (0);
 	while (i < philo->total_philos)
 	{
-		get_philo_args(&philo->philos[i], &philo->condition_eat, i, av + 1);
+		get_philo_args(philo, &philo->condition_eat, i + 1, av + 1);
 		read_philo_one(philo->philos[i]);
 		i++;
 	}
@@ -76,7 +82,26 @@ int	get_philos_data(t_philos *philo, char **av)
 
 int	turn_action(t_data *philo)
 {
-	printf("my turn (%d) \n", philo->id);
+	// iwould get the forks (check if fork[i] = 1 && fork[i + 1] = 1 to start eat)
+	// if (i - 1 == eat) (i == sleep) (i + 1 == thinking)
+	// if (philo->fork_available && )
+	// while (1)
+	// {
+		
+	// }
+	printf("id (%d)[%d, %d]\n", philo->id, philo->fork_mine, *philo->fork_available);
+	if (philo->fork_mine && *philo->fork_available)
+	{
+		philo->fork_mine = 0;
+		printf(" %d has fork right\n", philo->id);
+		*philo->fork_available = 0;
+		printf(" %d has fork left\n", philo->id);
+		printf(" %d is eating\n", philo->id);
+		usleep(philo->t_eat);
+		philo->fork_mine = 1;
+		*philo->fork_available = 1;
+	}
+	// if (philo->philos[i])
 	return (1);
 }
 

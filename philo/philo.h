@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 19:50:54 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/02 19:48:44 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/03 22:57:59 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,12 @@ typedef struct s_data{
 	int			id;
 	int			t_die;
 	int			t_eat;
-	int			fork_available;
 	int			t_sleep;
+	int			*fork_available;
+	int			fork_mine;
+	int			*is_dead;
 	int			count_eat;
+	// pthread_mutex_t	fork_mutex_mine;
 }	t_data;
 
 typedef struct s_philos{
