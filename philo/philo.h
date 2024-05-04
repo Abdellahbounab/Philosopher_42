@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 19:50:54 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/04 19:28:38 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/04 20:52:23 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,9 @@ typedef struct s_data{
 	int			t_sleep;
 	int			*fork_available;
 	int			fork_mine;
-	int			*is_dead;
 	int			count_eat;
+	int			*is_dead;
+	struct timeval *start_time;
 	pthread_mutex_t	*fork_mutex_mine;
 	pthread_mutex_t	*fork_mutex_other;
 }	t_data;
@@ -36,6 +37,7 @@ typedef struct s_data{
 typedef struct s_philos{
 	int	total_philos;
 	int	dead;
+	struct timeval time_begin;
 	int	condition_eat;
 	t_data *philos;
 }	t_philos;

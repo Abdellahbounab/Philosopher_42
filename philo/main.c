@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 19:50:33 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/04 20:16:37 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/04 20:55:13 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,7 @@ int get_philo_args(t_philos *philo, int *condition, int ids, char **av)
 	philo->philos[ids - 1].t_sleep = ft_atoi(av[2]);
 	philo->philos[ids - 1].fork_mine = 1;
 	philo->philos[ids - 1].is_dead = &philo->dead;
+	philo->philos[ids - 1].start_time = &philo->time_begin;
 	philo->philos[ids - 1].fork_mutex_other = NULL;
 	philo->philos[ids - 1].fork_mutex_mine = malloc(sizeof(pthread_mutex_t));
 	if (!philo->philos[ids - 1].fork_mutex_mine)
@@ -131,7 +132,9 @@ int	is_eating(t_data *philo)
 
 int ft_time(void)
 {
-	// 1 sec = 1000000 ms
+	// 1 s 	  = 1000000 micros
+	// 1 mls  = 1000 micros
+	// 1 s	  = 1000 mls
 	return (1);
 }
 
@@ -160,8 +163,11 @@ int	turn_action(t_data *philo)
 int	create_threads(t_philos philo)
 {
 	int i;
+	struct timeval entry;
 
 	i = 0;
+	gettimeofday(&entry, NULL);
+	philo.time_begin = entry;
 	while (i < philo.total_philos)
 	{
 		pthread_create(&philo.philos[i].thread, NULL, (void *)turn_action, (void *)&philo.philos[i]);
