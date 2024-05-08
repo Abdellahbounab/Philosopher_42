@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 19:50:54 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/07 20:38:27 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/08 16:55:38 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,18 +33,19 @@ typedef struct s_data{
 	long long			*program_timer;
 	long long			timer;
 
-	pthread_mutex_t	*fork_mutex_mine;
+	pthread_mutex_t	*fork_mutex_mine; //malloced
 	pthread_mutex_t	*fork_mutex_other;
-	pthread_mutex_t	*mutex_died;
-	pthread_mutex_t	*mutex_timer;
+	pthread_mutex_t *mutex_died; 
+	pthread_mutex_t *mutex_timer; //malloced
 }	t_data;
 
 typedef struct s_philos{
-	pthread_t	watcher;
+	// pthread_t	watcher;
 	int	total_philos;
 	int	dead;
 	long long	time_begin;
 	int	condition_eat;
+	pthread_mutex_t	*mutex_died_parent; //malloced
 	t_data *philos;
 }	t_philos;
 
