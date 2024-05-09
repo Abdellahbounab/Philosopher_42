@@ -1,6 +1,6 @@
 *is_dying :
 		philo died -> (is_died = philo_id)
-		finished eating -> (is_dead = -2)
+		finished eating -> (is_dead = -1 * philo_id)
 	return (0);
 
 *philo_is_died :
@@ -10,7 +10,7 @@
 		0 = no one died or finished eating;)
 
 *compare_time :
-	if (philo_is_died = 0)
+	if (philo_is_died = 0)            means that no one is died
 			if alive return (1)
 			else return (0)
 	else
@@ -20,6 +20,7 @@
 *watcher :
 	while philo died > -1
 		res = compare_time
+	
 			if res == 0 -> is is_dying
 			if res < 0 & all eat -> return 1
 

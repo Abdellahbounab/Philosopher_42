@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 19:50:54 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/09 13:59:11 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/09 22:48:01 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <stdio.h>
 # include <stdlib.h>
 # include <unistd.h>
+# include <string.h>
 # include <sys/time.h>
 
 typedef struct s_data{
@@ -27,7 +28,7 @@ typedef struct s_data{
 	long long			t_sleep;
 	int			*fork_available;
 	int			fork_mine;
-	int			count_eat;
+	int			*count_eat;
 	int			*is_dead;
 	
 	long long			*program_timer;
@@ -35,12 +36,14 @@ typedef struct s_data{
 
 	pthread_mutex_t	*fork_mutex_mine; //malloced
 	pthread_mutex_t	*fork_mutex_other;
-	pthread_mutex_t *mutex_died; 
+	pthread_mutex_t *mutex_died;
 	pthread_mutex_t *mutex_timer; //malloced
+	pthread_mutex_t *mutex_eat; //malloced
 }	t_data;
 
 typedef struct s_philos{
 	pthread_t	watcher;
+	int	*all_eat;
 	int	total_philos;
 	int	dead;
 	long long	time_begin;
