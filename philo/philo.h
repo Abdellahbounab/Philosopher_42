@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 19:50:54 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/08 16:55:38 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/09 13:59:11 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ typedef struct s_data{
 }	t_data;
 
 typedef struct s_philos{
-	// pthread_t	watcher;
+	pthread_t	watcher;
 	int	total_philos;
 	int	dead;
 	long long	time_begin;

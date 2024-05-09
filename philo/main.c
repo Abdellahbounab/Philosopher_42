@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 19:50:33 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/08 19:06:10 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/09 15:50:46 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,10 @@ int	philo_is_died(t_data *philo)
 
 	i = 0;
 	pthread_mutex_lock(philo->mutex_died);
-	if (!(*philo->is_dead))
-		i = 1;
+	if ((*philo->is_dead) > 0)
+		i = philo->id;
+	else if ((*philo->is_dead) == -2)
+		i = philo->id * -1;
 	pthread_mutex_unlock(philo->mutex_died);
 	return (i);
 }
@@ -52,7 +54,7 @@ long long ft_get_utime(void)
 
 int	ft_printer(t_data *philo, char *str)
 {
-	if (philo_is_died(philo))
+	if (!philo_is_died(philo))
 	{
 		printf("%lld %d %s\n", ((ft_get_utime() - *philo->program_timer)), philo->id, str);
 		return (1);
@@ -105,10 +107,8 @@ void	ft_usleep(t_data *philo ,long long timer)
 
 	now = ft_get_utime() * 1000;
 	val = now;
-	while (now != val + timer && philo_is_died(philo))
-	{
+	while (now != val + timer && !philo_is_died(philo))
 		now = ft_get_utime() * 1000;
-	}
 }
 
 int get_philo_args(t_philos *philo, int *condition, int ids, char **av)
@@ -171,20 +171,27 @@ int	compare_time(t_data *philo)
 	long long	now;
 
 	now = ft_get_utime();
-	pthread_mutex_lock(philo->mutex_timer);
-	if (now - philo->timer < philo->t_die)
-		return (pthread_mutex_unlock(philo->mutex_timer), 1);
-	return (pthread_mutex_unlock(philo->mutex_timer), 0);
+	if (!philo_is_died(philo))
+	{
+		pthread_mutex_lock(philo->mutex_timer);
+		if (now - philo->timer < philo->t_die)
+			return (pthread_mutex_unlock(philo->mutex_timer), 1);
+		return (pthread_mutex_unlock(philo->mutex_timer), 0);
+	}
+	return (-1);
 }
 
-int	is_dying(t_data *philo, int cond)
+int	is_dying(t_data *philo)
 {
-	if (philo_is_died(philo))
+	if (!philo_is_died(philo))
 	{
 		pthread_mutex_lock(philo->mutex_died);
-		*philo->is_dead = philo->id;
+		if (philo->count_eat)
+			*philo->is_dead = philo->id;
+		else
+			*philo->is_dead = -2;
 		pthread_mutex_unlock(philo->mutex_died);
-		if (cond)
+		if (philo->count_eat)
 			printf("%s%lld %d died%s\n", RED, ((ft_get_utime() - *philo->program_timer)), philo->id, DEFAULT);
 	}
 	return (0);
@@ -219,7 +226,7 @@ int	is_thinking(t_data *philo, int cond)
 
 int	handle_fork_mine(t_data *philo, int cond)
 {
-	if (philo_is_died(philo))
+	if (!philo_is_died(philo))
 	{	
 		pthread_mutex_lock(philo->mutex_timer);
 		if (cond)
@@ -228,7 +235,7 @@ int	handle_fork_mine(t_data *philo, int cond)
 		{
 			ft_usleep(philo ,(philo->t_die - (ft_get_utime() -  philo->timer)) * 1000);
 			pthread_mutex_unlock(philo->mutex_timer);
-			return (is_dying(philo, 1));
+			return (is_dying(philo));
 		}
 		pthread_mutex_unlock(philo->mutex_timer);
 		return (1);
@@ -241,7 +248,7 @@ int	is_eating(t_data *philo)
 	pthread_mutex_lock(philo->fork_mutex_mine);
 	handle_fork_mine(philo, philo->id);
 	ft_printer(philo, "has a fork 1");
-	if (handle_fork_mine(philo, 0) && philo_is_died(philo))
+	if (handle_fork_mine(philo, 0) && !philo_is_died(philo))
 	{
 		pthread_mutex_lock(philo->fork_mutex_other);
 		handle_fork_mine(philo, -1);
@@ -281,7 +288,7 @@ int	turn_action(t_data *philo)
 {
 	if (!(philo->id % 2))
 		is_thinking(philo, 0);
-	while (philo_is_died(philo) && philo->count_eat)
+	while (!philo_is_died(philo) && philo->count_eat)
 	{
 		if (is_eating(philo))
 		{
@@ -292,7 +299,7 @@ int	turn_action(t_data *philo)
 		}
 	}
 	if (!philo->count_eat)
-		is_dying(philo, 0);
+		is_dying(philo);
 	return (1);
 }
 
@@ -311,16 +318,37 @@ int	free_philos(t_philos *philo)
 	free(philo->philos);
 	return (1);
 }
+
+int	all_eated(t_philos *philo)
+{
+	int i;
+
+	i = 0;
+	while (i < philo->total_philos)
+	{
+		if (philo_is_died(&philo->philos[i]) == (i + 1) * -1)
+			i++;
+		else
+			return (0);
+	}
+	return (1);
+}
+
+
 int	watcher_action(t_philos *philo)
 {
 	int	i;
+	int	res;
 
 	i = 0;
-
+	res = 0;
 	while (philo->dead > -1)
 	{
-		if (!compare_time(&philo->philos[i]))
-			return (is_dying(&philo->philos[i], 1));
+		res = compare_time(&philo->philos[i]);
+		if (!res || (res < 0 && all_eated(philo)))
+			return (is_dying(&philo->philos[i]));
+		// else if (res < 0 && all_eated(philo))
+		// 	return (1);
 		if (i < philo->total_philos - 1)
 			i++;
 		else
@@ -332,20 +360,19 @@ int	watcher_action(t_philos *philo)
 int	waiting_threads(t_philos philo)
 {
 	int i;
-	int *status = NULL;
 
 	i = 0;
 	watcher_action(&philo);
 	while (i < philo.total_philos)
 	{
-		printf("philo join : %d\n", philo.philos[i].id);
-		if (!pthread_join(philo.philos[i].thread, (void *)status))
-			// pthread_exit(status);
+		// printf("philo join : %d\n", philo.philos[i].id);
+		if (!pthread_join(philo.philos[i].thread, NULL))
 			printf("thread[%d] is ended\n", i + 1);
 		else
 			printf("error join\n");
 		i++;
 	}
+	// pthread_join(philo.watcher, NULL);
 	free_philos(&philo);
 	return (1);
 }
