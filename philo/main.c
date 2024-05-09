@@ -288,7 +288,7 @@ int	turn_action(t_data *philo)
 {
 	if (!(philo->id % 2))
 		is_thinking(philo, 0);
-	while (philo_is_died(philo) > 0 && philo->count_eat)
+	while (philo_is_died(philo) <= 0 && philo->count_eat)
 	{
 		if (is_eating(philo))
 		{
