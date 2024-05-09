@@ -118,7 +118,7 @@ int get_philo_args(t_philos *philo, int *condition, int ids, char **av)
 	philo->philos[ids - 1].t_eat = ft_atoi(av[1]);
 	philo->philos[ids - 1].t_sleep = ft_atoi(av[2]);
 	philo->philos[ids - 1].fork_mine = ids;
-	philo->philos[ids - 1].thread = NULL;
+	// philo->philos[ids - 1].thread = NULL;
 	philo->philos[ids - 1].is_dead = &philo->dead;
 	philo->philos[ids - 1].fork_mutex_other = NULL;
 	philo->philos[ids - 1].fork_mutex_mine = malloc(sizeof(pthread_mutex_t));
@@ -196,8 +196,6 @@ int	is_dying(t_data *philo)
 		pthread_mutex_lock(philo->mutex_died);
 		if (*philo->count_eat)
 			*philo->is_dead = philo->id;
-		// else
-		// 	*philo->is_dead = philo->id * -1;
 		pthread_mutex_unlock(philo->mutex_died);
 		if (*philo->count_eat)
 			printf("%s%lld %d died%s\n", RED, ((ft_get_utime() - *philo->program_timer)), philo->id, DEFAULT);
@@ -223,9 +221,6 @@ int	is_sleeping(t_data *philo)
 
 int	is_thinking(t_data *philo, int cond)
 {
-	long long	now;
-
-	now = ft_get_utime();
 	ft_printer(philo, "thinking");
 	if (!cond)
 		ft_usleep(philo ,philo->t_eat * 1000);
@@ -343,11 +338,11 @@ int	all_eated(t_philos *philo)
 int	watcher_action(t_philos *philo)
 {
 	int	i;
-	int	res;
+	// int	res;
 
 	i = 0;
-	res = 0;
-	while (!philo->dead && !all_eated(philo))
+	// res = 0;
+	while (!philo->dead)
 	{
 		if (!pthread_mutex_lock(philo->philos[i].mutex_eat) && philo->philos[i].count_eat)
 		{
@@ -383,8 +378,11 @@ int	waiting_threads(t_philos philo)
 			printf("error join\n");
 		i++;
 	}
+	if (!philo_is_died(&philo.philos[i - 1]))
+		is_dying(&philo.philos[i - 1]);
 	pthread_join(philo.watcher, NULL);
 	free_philos(&philo);
+	system("leaks philo");
 	return (1);
 }
 
