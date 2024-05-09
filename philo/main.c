@@ -117,7 +117,7 @@ int get_philo_args(t_philos *philo, int *condition, int ids, char **av)
 	philo->philos[ids - 1].t_die = ft_atoi(av[0]);
 	philo->philos[ids - 1].t_eat = ft_atoi(av[1]);
 	philo->philos[ids - 1].t_sleep = ft_atoi(av[2]);
-	philo->philos[ids - 1].fork_mine = -1;
+	philo->philos[ids - 1].fork_mine = ids;
 	philo->philos[ids - 1].thread = NULL;
 	philo->philos[ids - 1].is_dead = &philo->dead;
 	philo->philos[ids - 1].fork_mutex_other = NULL;
@@ -234,47 +234,24 @@ int	is_thinking(t_data *philo, int cond)
 
 
 // have to handle this part since it does hang
-int	handle_fork_mine(t_data *philo, int cond)
+int	handle_fork_mine(t_data *philo)
 {
-	int i;
-
-	i = 0;
-	if (!philo_is_died(philo))
+	if (!philo_is_died(philo) && *philo->fork_available == philo->id)
 	{	
-		if (cond)
-		{
-			// pthread_mutex_lock(philo->mutex_died);
-			philo->fork_mine = cond;
-			// pthread_mutex_unlock(philo->mutex_died);
-		}
-		else
-		{
-			// pthread_mutex_lock(philo->mutex_died);
-			if (*philo->fork_available == philo->id)
-				i = 1;
-			// pthread_mutex_unlock(philo->mutex_died);
-			if (i)
-			{
 				ft_usleep(philo ,(philo->t_die - (ft_get_utime() -  philo->timer)) * 1000);
 				return (is_dying(philo));
-			}
 		}
 		return (1);
-	}
-	return (0);	
 }
 
 int	is_eating(t_data *philo)
 {
 	pthread_mutex_lock(philo->fork_mutex_mine);
-	
-	handle_fork_mine(philo, philo->id);
 	ft_printer(philo, "has a fork 1");
-	if (handle_fork_mine(philo, 0) && !philo_is_died(philo))
+	if (handle_fork_mine(philo) && !philo_is_died(philo))
 	{
 		pthread_mutex_lock(philo->fork_mutex_other);
 		// ft_printer(philo, "entring boucle");
-		handle_fork_mine(philo, -1);
 		if (ft_printer(philo, "has a fork 2") && ft_printer(philo, GREEN "is eating" DEFAULT))
 		{
 			pthread_mutex_lock(philo->mutex_timer);
