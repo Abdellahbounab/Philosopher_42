@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 19:50:54 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/09 22:48:01 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/10 20:00:53 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,11 +34,14 @@ typedef struct s_data{
 	long long			*program_timer;
 	long long			timer;
 
-	pthread_mutex_t	*fork_mutex_mine; //malloced
+	int			print;
+
+	pthread_mutex_t	*fork_mutex_mine;
 	pthread_mutex_t	*fork_mutex_other;
 	pthread_mutex_t *mutex_died;
-	pthread_mutex_t *mutex_timer; //malloced
-	pthread_mutex_t *mutex_eat; //malloced
+	pthread_mutex_t *mutex_timer;
+	pthread_mutex_t *mutex_eat;
+	pthread_mutex_t *mutex_printer;
 }	t_data;
 
 typedef struct s_philos{
@@ -48,7 +51,7 @@ typedef struct s_philos{
 	int	dead;
 	long long	time_begin;
 	int	condition_eat;
-	pthread_mutex_t	*mutex_died_parent; //malloced
+	pthread_mutex_t	*mutex_died_parent;
 	t_data *philos;
 }	t_philos;
 
@@ -57,7 +60,7 @@ typedef struct s_philos{
 
 #define RED "\033[31m"
 
-#define BLUE "\033[33m"
+#define BLUE "\033[34m"
 
 #define DEFAULT "\033[0m"
 
