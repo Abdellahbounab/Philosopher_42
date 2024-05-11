@@ -1,58 +1,66 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   philo.h                                            :+:      :+:    :+:   */
+/*   philo_bonus.h                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/04/28 19:50:54 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/11 15:28:40 by abounab          ###   ########.fr       */
+/*   Created: 2024/05/10 16:20:41 by abounab           #+#    #+#             */
+/*   Updated: 2024/05/11 18:17:30 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PHILO_H
-# define PHILO_H
+#ifndef PHILO_BONUS_H
+# define PHILO_BONUS_H
 
 # include <pthread.h>
 # include <stdio.h>
 # include <stdlib.h>
 # include <unistd.h>
 # include <string.h>
+# include <semaphore.h>
 # include <sys/time.h>
 
 typedef struct s_data{
-	pthread_t	thread;
 	int			id;
-	
 	long long			t_die;
 	long long			t_eat;
 	long long			t_sleep;
-	int			*fork_available;
-	int			fork_mine;
 	int			*count_eat;
 	int			*is_dead;
+	
+	int			print;
+
+	int			n_philos;
 	
 	long long			*program_timer;
 	long long			timer;
 
-	int			print;
+	int			*forks;
 
-	pthread_mutex_t	*fork_mutex_mine;
-	pthread_mutex_t	*fork_mutex_other;
-	pthread_mutex_t *mutex_died;
-	pthread_mutex_t *mutex_timer;
-	pthread_mutex_t *mutex_eat;
-	pthread_mutex_t *mutex_printer;
+	int			forks_mine;
+	
+	char	*str_printer;
+	char	*str_timer;
+	char	*str_eat;
+	
+	sem_t 	*sem_died;
+	sem_t 	*sem_forks_checker;
+	sem_t 	*sem_printer;//malloced ==>shared with main
+	sem_t 	*sem_timer; //malloced ==>shared with main
+	sem_t 	*sem_eat; //malloced ==>shared with main
 }	t_data;
 
 typedef struct s_philos{
-	pthread_t	watcher;
 	int	*all_eat;
+	int	*arr_pid;
 	int	total_philos;
 	int	dead;
+	int	forks_philos;
 	long long	time_begin;
 	int	condition_eat;
-	pthread_mutex_t	*mutex_died_parent;
+	sem_t	*sem_forks; //malloced ==> shared between processes
+	sem_t	*sem_died_parent; //malloced ==>share with processes
 	t_data *philos;
 }	t_philos;
 
@@ -64,5 +72,9 @@ typedef struct s_philos{
 #define BLUE "\033[34m"
 
 #define DEFAULT "\033[0m"
+
+
+
+int	is_eating(t_data *philo);
 
 #endif
