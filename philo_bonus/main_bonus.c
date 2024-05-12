@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/11 12:37:21 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/11 20:38:37 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/12 18:35:06 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,7 +142,7 @@ int	check_printer(t_data *philo)
 	sem_wait(philo->sem_printer);
 	if (philo->print)
 		i = 1;
-	printf("%d\n", i);
+	// printf("%d\n", i);
 	sem_post(philo->sem_printer);
 	return (i);
 }
@@ -151,8 +151,8 @@ int	ft_printer(t_data *philo, char *str)
 {
 	if (check_printer(philo))
 	{
-		(void)str;
-		// printf("%lld %d %s\n", ((ft_get_utime() - *philo->program_timer)), philo->id, str);
+		// (void)str;
+		printf("%lld %d %s\n", ((ft_get_utime() - *philo->program_timer)), philo->id, str);
 		return (1);
 	}
 	return (0);
@@ -456,7 +456,8 @@ int	annonce_death(t_philos *philo)
 	while (i < philo->total_philos)
 	{
 		sem_wait(philo->philos[i].sem_printer);
-		philo->philos[i].print = 0;
+		// philo->philos[i].print = 0;
+		kill(philo->arr_pid[i], SIGTERM);
 		sem_post(philo->philos[i].sem_printer);
 		i++;
 	}

@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/10 16:20:41 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/11 18:17:30 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/12 18:34:06 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <stdlib.h>
 # include <unistd.h>
 # include <string.h>
+# include <signal.h>
 # include <semaphore.h>
 # include <sys/time.h>
 
