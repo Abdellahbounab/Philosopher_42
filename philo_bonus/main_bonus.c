@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/11 12:37:21 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/13 22:58:04 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/14 21:54:38 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 int	read_philo_one(t_data philo)
 {
-	return (printf("philo(%d);%d;%d[%lld, %lld, %lld]{%p, %p}\n", philo.id, *philo.count_eat, *philo.is_dead, philo.t_die, philo.t_eat, philo.t_sleep, philo.sem_forks_checker, philo.sem_forks_checker));
+	return (printf("philo(%d);%d;%d[%lld, %lld, %lld]{%p, %p}\n", philo.id, philo.count_eat, *philo.is_dead, philo.t_die, philo.t_eat, philo.t_sleep, philo.sem_forks_checker, philo.sem_forks_checker));
 }
 
 int	ft_strlen(char *str)
@@ -132,8 +132,8 @@ long long ft_get_utime(void)
 int	ft_printer(t_data *philo, char *str)
 {
 	if (!philo_is_died(philo))
-		return (printf("%lld %d %s\n", ((ft_get_utime() - *philo->program_timer)), philo->id, str), 0);
-	return (1);
+		return (printf("%lld %d %s\n", ((ft_get_utime() - philo->program_timer)), philo->id, str), 1);
+	return (0);
 }
 
 int	ft_atoi(char *str)
@@ -197,8 +197,9 @@ int get_philo_args(t_philos *philo, int *condition, int ids, char **av)
 	philo->philos[ids - 1].is_dead = &philo->dead;
 	// philo->philos[ids - 1].forks = philo->total_philos;
 
-	philo->philos[ids - 1].sem_forks_checker = philo->sem_forks;
-	philo->philos[ids - 1].sem_died = philo->sem_died_parent;
+	philo->philos[ids - 1].sem_forks_checker = philo->sem_forks; //this on for number of forks together
+	philo->philos[ids - 1].sem_died = philo->sem_died_parent; //this one coming from parent , if it holds means someone dead
+	philo->philos[ids - 1].sem_begin = philo->begin_all; //this one where the parent would give them a permission to start all in the same pace
 	
 	// check for erros(success if == 0  -1 == failure)
 	philo->philos[ids - 1].sem_timer_parent = malloc (sizeof(sem_t));
@@ -210,8 +211,8 @@ int get_philo_args(t_philos *philo, int *condition, int ids, char **av)
 	
 	sem_unlink(philo->philos[ids - 1].str_parent);
 	sem_unlink(philo->philos[ids - 1].str_child);
-	philo->philos[ids - 1].sem_timer_parent = sem_open(philo->philos[ids - 1].str_parent, O_CREAT, 0640, 1);
-	philo->philos[ids - 1].sem_timer = sem_open(philo->philos[ids - 1].str_child, O_CREAT, 0640, 0);
+	philo->philos[ids - 1].sem_timer_parent = sem_open(philo->philos[ids - 1].str_parent, O_CREAT, 0640, 1); //this one used to avoid data race with timer (between threads and watcher thread)
+	philo->philos[ids - 1].sem_timer = sem_open(philo->philos[ids - 1].str_child, O_CREAT, 0640, 0); //this one is where the processes will allow parent copy thread to access the timer to change it
 
 	// sem_post(philo->philos[ids - 1].sem_timer);
 	// sem_post(philo->philos[ids - 1].sem_eat);
@@ -247,25 +248,23 @@ int	get_philos_data(t_philos *philo, char **av)
 		return (0);
 	philo->philos = (t_data *) malloc (sizeof(t_data) * philo->total_philos);
 	philo->dead = 0;
-	philo->time_begin = ft_get_utime();
-	// philo->forks_philos = philo->total_philos; 
 	philo->arr_pid = malloc (sizeof(int) * philo->total_philos);
-	// if (!philo->all_eat)
-	// 	return (free(philo->philos), 0);
 	philo->sem_died_parent = malloc (sizeof(sem_t));
-	philo->sem_forks = malloc (sizeof(sem_t));
+	philo->begin_all = malloc (sizeof(sem_t));
 
 	sem_unlink("/sem_died");
 	sem_unlink("/sem_forks_all");
+	sem_unlink("/sem_begin_all");
 	
 	philo->sem_died_parent = sem_open("/sem_died", O_CREAT, 0640, 1);
+	philo->begin_all = sem_open("/sem_begin_all", O_CREAT, 0640, 0);
 	philo->sem_forks = sem_open("/sem_forks_all", O_CREAT, 0640, philo->total_philos);
+
 	while (i < philo->total_philos)
 	{
 		get_philo_args(philo, &philo->condition_eat, i + 1, av + 1);
 		i++;
 	}
-	// get_other_sem(philo);
 	return (1);
 }
 
@@ -273,8 +272,8 @@ int	compare_time(t_data *philo)
 {
 	long long	now;
 
-	now = ft_get_utime();
 	sem_wait(philo->sem_timer_parent);
+	now = ft_get_utime();
 	if (now - philo->timer < philo->t_die)
 		return (sem_post(philo->sem_timer_parent), 1);
 	sem_post(philo->sem_timer_parent);
@@ -285,11 +284,10 @@ int	is_dying(t_data *philo)
 {
 	sem_wait(philo->sem_died);
 	if (philo->count_eat)
-		philo->is_dead = philo->id;
-	// printf("dead + %d\n", *philo->is_dead);
-	// sem_post(philo->sem_died);
-	if (*philo->count_eat)
-		printf("%s%lld %d died%s\n", RED, ((ft_get_utime() - *philo->program_timer)), philo->id, DEFAULT);
+	{
+		*philo->is_dead = philo->id;
+		printf("%s%lld %d died%s\n", RED, ((ft_get_utime() - philo->program_timer)), philo->id, DEFAULT);	
+	}
 	return (1);
 }
 
@@ -345,28 +343,36 @@ int	is_eating(t_data *philo)
 int	get_philos_time(t_philos *philo)
 {
 	int	i;
-	long long now;
 
 	i = 0;
-	now = ft_get_utime();
 	while (i < philo->total_philos)
 	{
-		philo->philos[i].timer = now;
-		philo->philos[i].program_timer = &philo->time_begin;
+		philo->philos[i].timer = ft_get_utime();
+		// philo->philos[i].program_timer = &philo->time_begin;
 		i++;
 	}
 	return (1);
 }
 
+int	get_program_timer(t_data *philo)
+{
+	sem_wait(philo->sem_begin);
+	philo->timer = ft_get_utime();
+	philo->program_timer = ft_get_utime();
+	sem_post(philo->sem_begin);
+	return (1);
+}
+
 int	turn_action(t_data *philo)
 {
+	get_program_timer(philo);
 	is_thinking(philo, 0);
-	while (*philo->count_eat)
+	while (philo->count_eat)
 	{
 		if (is_eating(philo))
 		{
-			if (*philo->count_eat > 0)
-				(*philo->count_eat)--;
+			if (philo->count_eat > 0)
+				(philo->count_eat)--;
 			if (is_sleeping(philo))
 				is_thinking(philo, 1);
 		}
@@ -406,7 +412,6 @@ int	annonce_death(t_philos *philo, int pos)
 	int	i;
 
 	i = 0;
-	printf("main annoonce======>\n");
 	is_dying(&philo->philos[pos]);
 	while (i < philo->total_philos)
 	{
@@ -426,14 +431,15 @@ int	watcher_action(t_philos *philo)
 	i = 0;
 	while (!philo->dead)
 	{
-		sem_post(philo->sem_died_parent);
+		usleep(50);
 		if (!sem_wait(philo->philos[i].sem_timer_parent) && philo->philos[i].count_eat)
 		{
 			sem_post(philo->philos[i].sem_timer_parent);
 			if (!compare_time(&philo->philos[i]))
 				return (annonce_death(philo, i));
 		}
-		sem_post(philo->philos[i].sem_timer_parent);
+		else
+			sem_post(philo->philos[i].sem_timer_parent);
 		if (i < philo->total_philos - 1)
 			i++;
 		else
@@ -444,6 +450,8 @@ int	watcher_action(t_philos *philo)
 
 int	process_routine(t_data *philo)
 {
+	philo->timer = ft_get_utime();
+	philo->program_timer = ft_get_utime();
 	while (philo->count_eat)
 	{
 		sem_wait(philo->sem_timer);
@@ -452,7 +460,7 @@ int	process_routine(t_data *philo)
 		if (philo->count_eat > 0)
 			philo->count_eat--;
 		sem_post(philo->sem_timer_parent);
-		if (philo->is_dead)
+		if (*philo->is_dead)
 			return (0);
 	}
 	return (1);
@@ -465,10 +473,11 @@ int	create_watchers(t_philos *philo)
 	i = 0;
 	while (i < philo->total_philos)
 	{
-		pthread_create(&philo->philos[i].thread_philo, NULL, (void *)process_routine, &philo->philos[i]);
+		pthread_create(&philo->philos[i].thread_philo, NULL, (void *)process_routine, (void *)&philo->philos[i]);
 		i++;
 	}
-	pthread_create(&philo->watcher, NULL, (void *)watcher_action, &philo);
+	pthread_create(&philo->watcher, NULL, (void *)watcher_action, (void *)philo);
+	sem_post(philo->begin_all);
 	return (1);
 }
 
@@ -484,6 +493,7 @@ int	waiting_threads(t_philos philo)
 	create_watchers(&philo);
 	while (i < philo.total_philos)
 	{
+		pthread_join(philo.philos[i].thread_philo, NULL);
 		waitpid(philo.arr_pid[i], NULL, 0);
 		i++;
 	}
@@ -498,7 +508,9 @@ int	run_simulation(t_philos philo)
 	int	pid_cpy;
 
 	i = 0;
-	get_philos_time(&philo);
+	pid_cpy = 0;
+	// get_philos_time(&philo);
+	// philo.time_begin = ft_get_utime();
 	while (i < philo.total_philos)
 	{
 		pid_cpy = fork();
@@ -508,6 +520,7 @@ int	run_simulation(t_philos philo)
 			philo.arr_pid[i] = pid_cpy;
 		i++;
 	}
+	// sem_post(philo.begin_all);
 	waiting_threads(philo);
 	return (1);
 }

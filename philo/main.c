@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 19:50:33 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/13 22:50:04 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/14 15:29:03 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -282,13 +282,11 @@ int	is_eating(t_data *philo)
 int	get_philos_time(t_philos *philo)
 {
 	int	i;
-	long long now;
 
 	i = 0;
-	now = ft_get_utime();
 	while (i < philo->total_philos)
 	{
-		philo->philos[i].timer = now;
+		philo->philos[i].timer = ft_get_utime();
 		philo->philos[i].program_timer = &philo->time_begin;
 		i++;
 	}
