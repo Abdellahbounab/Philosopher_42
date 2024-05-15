@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/11 12:37:21 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/14 21:54:38 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/15 15:51:04 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -185,6 +185,7 @@ void	ft_usleep(long long timer)
 
 int get_philo_args(t_philos *philo, int *condition, int ids, char **av)
 {
+	char	*id_str = ft_itoa(ids);
 	philo->philos[ids - 1].id = ids;
 	philo->philos[ids - 1].t_die = ft_atoi(av[0]);
 	philo->philos[ids - 1].t_eat = ft_atoi(av[1]);
@@ -199,21 +200,21 @@ int get_philo_args(t_philos *philo, int *condition, int ids, char **av)
 
 	philo->philos[ids - 1].sem_forks_checker = philo->sem_forks; //this on for number of forks together
 	philo->philos[ids - 1].sem_died = philo->sem_died_parent; //this one coming from parent , if it holds means someone dead
-	philo->philos[ids - 1].sem_begin = philo->begin_all; //this one where the parent would give them a permission to start all in the same pace
-	
-	// check for erros(success if == 0  -1 == failure)
-	philo->philos[ids - 1].sem_timer_parent = malloc (sizeof(sem_t));
-	philo->philos[ids - 1].sem_timer = malloc (sizeof(sem_t));
-	
+	philo->philos[ids - 1].sem_begin = philo->sem_begin_all; //this one where the parent would give them a permission to start all in the same pace
+
 	// check for errors
-	philo->philos[ids - 1].str_child = ft_strjoin("/sem_timer_child", ft_itoa(ids));
-	philo->philos[ids - 1].str_parent = ft_strjoin("/sem_timer_parent", ft_itoa(ids));
+	philo->philos[ids - 1].str_child = ft_strjoin("/sem_timer_child", id_str);
+	philo->philos[ids - 1].str_parent = ft_strjoin("/sem_timer_parent", id_str);
 	
 	sem_unlink(philo->philos[ids - 1].str_parent);
 	sem_unlink(philo->philos[ids - 1].str_child);
+	
 	philo->philos[ids - 1].sem_timer_parent = sem_open(philo->philos[ids - 1].str_parent, O_CREAT, 0640, 1); //this one used to avoid data race with timer (between threads and watcher thread)
 	philo->philos[ids - 1].sem_timer = sem_open(philo->philos[ids - 1].str_child, O_CREAT, 0640, 0); //this one is where the processes will allow parent copy thread to access the timer to change it
 
+	free(id_str);
+	free(philo->philos[ids - 1].str_child);
+	free(philo->philos[ids - 1].str_parent);
 	// sem_post(philo->philos[ids - 1].sem_timer);
 	// sem_post(philo->philos[ids - 1].sem_eat);
 	// sem_post(philo->philos[ids - 1].sem_printer);
@@ -249,15 +250,13 @@ int	get_philos_data(t_philos *philo, char **av)
 	philo->philos = (t_data *) malloc (sizeof(t_data) * philo->total_philos);
 	philo->dead = 0;
 	philo->arr_pid = malloc (sizeof(int) * philo->total_philos);
-	philo->sem_died_parent = malloc (sizeof(sem_t));
-	philo->begin_all = malloc (sizeof(sem_t));
 
 	sem_unlink("/sem_died");
 	sem_unlink("/sem_forks_all");
-	sem_unlink("/sem_begin_all");
+	sem_unlink("/sem_sem_begin_all");
 	
 	philo->sem_died_parent = sem_open("/sem_died", O_CREAT, 0640, 1);
-	philo->begin_all = sem_open("/sem_begin_all", O_CREAT, 0640, 0);
+	philo->sem_begin_all = sem_open("/sem_sem_begin_all", O_CREAT, 0640, 0);
 	philo->sem_forks = sem_open("/sem_forks_all", O_CREAT, 0640, philo->total_philos);
 
 	while (i < philo->total_philos)
@@ -377,12 +376,7 @@ int	turn_action(t_data *philo)
 				is_thinking(philo, 1);
 		}
 	}
-	// check if i have to delete all sems
-	// sem_close(philo->sem_forks_checker);
-	// sem_close(philo->sem_timer);
-	// sem_close(philo->sem_printer);
-	// sem_close(philo->sem_eat);
-	// sem_close(philo->sem_died);
+	// exit(1);
 	return (1);
 }
 
@@ -393,14 +387,19 @@ int	free_philos(t_philos *philo)
 	i = 0;
 	while (i < philo->total_philos)
 	{
-		// sem_unlink(philo->philos[i].str_timer);
-		// free(philo->philos[i].sem_timer);
-		// sem_unlink(philo->philos[i].str_eat);
-		// free(philo->philos[i].sem_eat);
-		// sem_unlink(philo->philos[i].str_printer);
-		// free(philo->philos[i].sem_printer);
+		sem_close(philo->philos[i].sem_timer);
+		sem_close(philo->philos[i].sem_timer_parent);
+		// sem_unlink(philo->philos[i].str_child);
+		// sem_unlink(philo->philos[i].str_parent);
+		// free(philo->philos[i].str_child);
+		// free(philo->philos[i].str_parent);
 		i++;
 	}
+	sem_close(philo->sem_died_parent);
+	sem_close(philo->sem_forks);
+	sem_close(philo->sem_begin_all);
+	free(philo->arr_pid);
+	free(philo->philos);
 	// sem_unlink("/sem_printer");
 	// free(philo->sem_died_parent);
 	// free(philo->philos);
@@ -431,7 +430,7 @@ int	watcher_action(t_philos *philo)
 	i = 0;
 	while (!philo->dead)
 	{
-		usleep(50);
+		// usleep(50);
 		if (!sem_wait(philo->philos[i].sem_timer_parent) && philo->philos[i].count_eat)
 		{
 			sem_post(philo->philos[i].sem_timer_parent);
@@ -450,7 +449,9 @@ int	watcher_action(t_philos *philo)
 
 int	process_routine(t_data *philo)
 {
+	sem_wait(philo->sem_timer_parent);	
 	philo->timer = ft_get_utime();
+	sem_post(philo->sem_timer_parent);
 	philo->program_timer = ft_get_utime();
 	while (philo->count_eat)
 	{
@@ -477,7 +478,7 @@ int	create_watchers(t_philos *philo)
 		i++;
 	}
 	pthread_create(&philo->watcher, NULL, (void *)watcher_action, (void *)philo);
-	sem_post(philo->begin_all);
+	sem_post(philo->sem_begin_all);
 	return (1);
 }
 
@@ -493,6 +494,7 @@ int	waiting_threads(t_philos philo)
 	create_watchers(&philo);
 	while (i < philo.total_philos)
 	{
+		printf("waited %d\n",philo.philos[i].id);
 		pthread_join(philo.philos[i].thread_philo, NULL);
 		waitpid(philo.arr_pid[i], NULL, 0);
 		i++;
@@ -520,7 +522,7 @@ int	run_simulation(t_philos philo)
 			philo.arr_pid[i] = pid_cpy;
 		i++;
 	}
-	// sem_post(philo.begin_all);
+	// sem_post(philo.sem_begin_all);
 	waiting_threads(philo);
 	return (1);
 }
@@ -533,5 +535,7 @@ int	main(int ac, char **av)
 	{
 		if (get_philos_data(&philo, av + 1))
 			run_simulation(philo);
+		// printf("salina\n");
+		system("leaks philo_bonus");
 	}
 }

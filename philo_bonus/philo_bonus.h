@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/10 16:20:41 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/14 21:16:59 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/14 22:04:42 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,19 +27,14 @@ typedef struct s_data{
 	long long			t_die;
 	long long			t_eat;
 	long long			t_sleep;
+	
 	int			count_eat;
 	int			*is_dead;
-	
-	int			print;
 
 	int			n_philos;
 	
 	long long			program_timer;
 	long long			timer;
-
-	// int			forks;
-
-	// int			forks_mine;
 	
 	char	*str_child;
 	char	*str_parent;
@@ -63,8 +58,8 @@ typedef struct s_philos{
 
 	pthread_t watcher;
 
-	sem_t 	*begin_all;//malloced ==>
-	sem_t 	*sem_died_parent; 
+	sem_t 	*sem_begin_all;//malloced ==>
+	sem_t 	*sem_died_parent; //malloced
 	sem_t	*sem_forks; //malloced ==> shared between processes
 	t_data *philos;
 }	t_philos;
