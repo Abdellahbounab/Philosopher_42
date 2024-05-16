@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/10 16:20:41 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/14 22:04:42 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/16 12:44:03 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ typedef struct s_data{
 	sem_t 	*sem_died;
 	sem_t 	*sem_forks_checker;
 	sem_t 	*sem_begin;
+	sem_t 	*sem_print;
 	sem_t 	*sem_timer; //malloced ==>shared with main
 	sem_t 	*sem_timer_parent; //malloced ==>shared with main
 }	t_data;
@@ -61,6 +62,7 @@ typedef struct s_philos{
 	sem_t 	*sem_begin_all;//malloced ==>
 	sem_t 	*sem_died_parent; //malloced
 	sem_t	*sem_forks; //malloced ==> shared between processes
+	sem_t	*sem_printer_parent; //malloced ==> shared between processes
 	t_data *philos;
 }	t_philos;
 
