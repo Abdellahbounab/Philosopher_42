@@ -6,216 +6,13 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/11 12:37:21 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/16 19:37:06 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/17 18:55:38 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
 
-int	ft_strlen(char *str)
-{
-	int	i;
-
-	i = 0;
-	while (str && str[i])
-		i++;
-	return (i);
-}
-
-char	*ft_strjoin(char const *s1, char const *s2)
-{
-	char	*joined;
-	size_t	total_len;
-	size_t	i;
-
-	i = 0;
-	if (s1 && s2)
-	{
-		total_len = ft_strlen((char *)s1) + ft_strlen((char *)s2);
-		joined = (char *) malloc(sizeof(char) * (total_len + 1));
-		if (!joined)
-			return (NULL);
-		while (i < total_len)
-		{
-			if (*s1)
-				*(joined + i) = *((char *)s1++);
-			else
-				*(joined + i) = *((char *)s2++);
-			i++;
-		}
-		*(joined + i) = 0;
-		return (joined);
-	}
-	return (0);
-}
-
-static char	*count_bits(int n, int *cmpt)
-{
-	int		counter;
-	char	*num;
-
-	counter = 0;
-	if (n == 0)
-		counter++;
-	while (n)
-	{
-		counter++;
-		n /= 10;
-	}
-	*cmpt = counter + 1;
-	num = (char *) malloc (sizeof(char) * counter + 1);
-	if (!num)
-		return (NULL);
-	num[counter] = 0;
-	return (num);
-}
-
-char	*ft_itoa(int n)
-{
-	char	*strnum;
-	int		counter;
-
-	counter = 0;
-	strnum = count_bits(n, &counter);
-	if (!strnum)
-		return (NULL);
-	if (n == 0)
-		strnum[0] = '0';
-	else
-	{
-		counter--;
-		while (--counter >= 0)
-		{
-			strnum[counter] = (n % 10) + '0';
-			n /= 10;
-		}
-	}
-	return (strnum);
-}
-
-int	philo_is_died(t_data *philo)
-{
-	int i;
-
-	i = 0;
-	sem_wait(philo->sem_died);
-	if ((*philo->is_dead))
-		i = philo->id;
-		// printf("entred%d\n", philo->id);
-	sem_post(philo->sem_died);
-	return (i);
-}
-
-long long ft_get_utime(void)
-{
-	struct timeval now;
-
-	gettimeofday(&now, NULL);
-	return (((now.tv_sec * 1000000) + now.tv_usec) / 1000);
-}
-
-int	ft_printer(t_data *philo, char *str)
-{
-	if (!philo_is_died(philo))
-		return (sem_wait(philo->sem_print), printf("%lld %d %s\n", 
-			((ft_get_utime() - philo->program_timer)), philo->id, str),
-			 sem_post(philo->sem_print), 1);
-	return (0);
-}
-
-int	ft_atoi(char *str)
-{
-	int	num;
-	int sign;
-
-	num = 0;
-	sign = 1;
-	if (str && (*str == '-' || *str == '+'))
-	{
-		if (*str == '-')
-			sign = -1;
-		str++;
-	}
-	while (str && *str && *str >= '0' && *str <= '9')
-	{
-		num *= 10;
-		num += (*str - '0');
-		str++;
-	}
-	if (*str)
-		return (0);
-	return (num * sign);
-}
-
-int	get_other_sem(t_philos *philo)
-{
-	int	i;
-
-	i = 0;
-	while (i < philo->total_philos - 1)
-	{
-		philo->philos[i].sem_forks_checker = philo->philos[i + 1].sem_forks_checker;
-		i++;
-	}
-	philo->philos[i].sem_forks_checker = philo->philos[0].sem_forks_checker;
-	return (1);
-}
-
-void	ft_usleep(long long timer)
-{
-	long long	val;
-
-	val = ft_get_utime() * 1000;
-	while (ft_get_utime() * 1000 < val + timer)
-		usleep(70);
-}
-
-int get_philo_args(t_philos *philo, int *condition, int ids, char **av)
-{
-	char	*id_str = ft_itoa(ids);
-	philo->philos[ids - 1].id = ids;
-	philo->philos[ids - 1].t_die = ft_atoi(av[0]);
-	philo->philos[ids - 1].t_eat = ft_atoi(av[1]);
-	philo->philos[ids - 1].t_sleep = ft_atoi(av[2]);
-	
-	// philo->philos[ids - 1].forks_mine = 0;
-	// philo->philos[ids - 1].print = 1;
-	philo->philos[ids - 1].n_philos = philo->total_philos;
-	
-	philo->philos[ids - 1].is_dead = &philo->dead;
-	// philo->philos[ids - 1].forks = philo->total_philos;
-
-	philo->philos[ids - 1].sem_forks_checker = philo->sem_forks; //this on for number of forks together
-	philo->philos[ids - 1].sem_print = philo->sem_printer_parent; //this on for number of forks together
-	philo->philos[ids - 1].sem_died = philo->sem_died_parent; //this one coming from parent , if it holds means someone dead
-	philo->philos[ids - 1].sem_begin = philo->sem_begin_all; //this one where the parent would give them a permission to start all in the same pace
-
-	// check for errors
-	philo->philos[ids - 1].str_child = ft_strjoin("/sem_timer_child", id_str);
-	philo->philos[ids - 1].str_parent = ft_strjoin("/sem_timer_parent", id_str);
-	
-	sem_unlink(philo->philos[ids - 1].str_parent);
-	sem_unlink(philo->philos[ids - 1].str_child);
-	sem_unlink(philo->philos[ids - 1].str_child);
-	
-	philo->philos[ids - 1].sem_timer_parent = sem_open(philo->philos[ids - 1].str_parent, O_CREAT, 0640, 1); //this one used to avoid data race with timer (between threads and watcher thread)
-	philo->philos[ids - 1].sem_timer = sem_open(philo->philos[ids - 1].str_child, O_CREAT, 0640, 0); //this one is where the processes will allow parent copy thread to access the timer to change it
-
-	free(id_str);
-	// free(philo->philos[ids - 1].str_child);
-	// free(philo->philos[ids - 1].str_parent);
-	// sem_post(philo->philos[ids - 1].sem_timer);
-	// sem_post(philo->philos[ids - 1].sem_eat);
-	// sem_post(philo->philos[ids - 1].sem_printer);
-		
-	*condition = -1;
-	if (av[3])
-		*condition = ft_atoi(av[3]);
-	philo->philos[ids - 1].count_eat = *condition;
-	return (1);
-}
-
-int	param_is_correct(char **av) // main
+static int	param_is_correct(char **av)
 {
 	if (ft_atoi(av[1]) > 0 && ft_atoi(av[2]) > 0 && ft_atoi(av[3]) > 0)
 	{
@@ -226,7 +23,7 @@ int	param_is_correct(char **av) // main
 	return (0);
 }
 
-int	get_philos_data(t_philos *philo, char **av) // main
+static int	get_philos_data(t_philos *philo, char **av)
 {
 	int	i;
 
@@ -236,9 +33,9 @@ int	get_philos_data(t_philos *philo, char **av) // main
 		return (0);
 	if (!param_is_correct(av))
 		return (0);
-	philo->philos = malloc (sizeof(t_data) * philo->total_philos);
+	philo->philos = malloc(sizeof(t_data) * philo->total_philos);
 	philo->dead = 0;
-	philo->arr_pid = malloc (sizeof(int) * philo->total_philos);
+	philo->arr_pid = malloc(sizeof(int) * philo->total_philos);
 	sem_unlink("/sem_died");
 	sem_unlink("/sem_forks_all");
 	sem_unlink("/sem_sem_begin_all");
@@ -246,257 +43,17 @@ int	get_philos_data(t_philos *philo, char **av) // main
 	philo->sem_died_parent = sem_open("/sem_died", O_CREAT, 0640, 1);
 	philo->sem_begin_all = sem_open("/sem_sem_begin_all", O_CREAT, 0640, 0);
 	philo->sem_printer_parent = sem_open("/sem_printer", O_CREAT, 0640, 1);
-	philo->sem_forks = sem_open("/sem_forks_all", O_CREAT, 0640, philo->total_philos);
+	philo->sem_forks = sem_open("/sem_forks_all", O_CREAT, 0640,
+			philo->total_philos);
+	philo->condition_eat = -1;
 	while (i < philo->total_philos)
 		get_philo_args(philo, &philo->condition_eat, ++i, av + 1);
 	return (1);
 }
 
-int	compare_time(t_data *philo)
-{
-	long long	now;
-
-	sem_wait(philo->sem_timer_parent);
-	now = ft_get_utime();
-	if (now - philo->timer < philo->t_die)
-		return (sem_post(philo->sem_timer_parent), 1);
-	sem_post(philo->sem_timer_parent);
-	return (0);
-}
-
-int	is_dying(t_data *philo)
-{
-	sem_wait(philo->sem_print);
-	sem_wait(philo->sem_died);
-	if (philo->count_eat)
-	{
-		// ft_printer(philo, RED"died"DEFAULT);
-		*philo->is_dead = philo->id;
-		printf("%s%lld %d died%s\n", RED, ((ft_get_utime() - philo->program_timer)), philo->id, DEFAULT);
-	}
-	// sem_post(philo->sem_print);
-	
-	return (1);
-}
-
-int	is_sleeping(t_data *philo)
-{
-	if (!ft_printer(philo, "is sleeping"))
-		return (0);
-	if (philo->t_sleep + (ft_get_utime() - philo->timer) < philo->t_die)
-	{
-		ft_usleep(philo->timer + philo->t_sleep * 1000 - ft_get_utime());
-		return (1);
-	}
-	return (0);
-}
-
-int	is_thinking(t_data *philo, int cond)
-{
-	ft_printer(philo, "is thinking");
-	if (!cond && !(philo->id % 2))
-		ft_usleep(philo->t_eat / 2 * 1000);
-	return (1);
-}
-
-int	handle_fork_mine(t_data *philo)
-{
-	
-	sem_wait(philo->sem_forks_checker);
-	ft_printer(philo, "has taken a fork");
-	if (philo->n_philos == 1)
-		return (ft_usleep((philo->t_die - (ft_get_utime() -  philo->timer)) * 1000), is_dying(philo));
-	else
-		return (1);
-}
-
-int	is_eating(t_data *philo)
-{
-	if (handle_fork_mine(philo))
-	{
-		sem_wait(philo->sem_forks_checker);
-		ft_printer(philo, "has taken a fork");
-		ft_printer(philo,  "is eating");
-		sem_post(philo->sem_timer);
-		philo->timer = ft_get_utime();
-		ft_usleep(philo->timer + (philo->t_eat * 1000) - ft_get_utime());
-		sem_post(philo->sem_forks_checker);
-		sem_post(philo->sem_forks_checker);
-		return (1);
-	}
-	return (0);
-}
-
-
-int	get_philos_time(t_philos *philo)
+static int	run_simulation(t_philos philo)
 {
 	int	i;
-
-	i = 0;
-	while (i < philo->total_philos)
-	{
-		philo->philos[i].timer = ft_get_utime();
-		// philo->philos[i].program_timer = &philo->time_begin;
-		i++;
-	}
-	return (1);
-}
-
-int	get_program_timer(t_data *philo)
-{
-	sem_wait(philo->sem_begin);
-	philo->timer = ft_get_utime();
-	philo->program_timer = ft_get_utime();
-	sem_post(philo->sem_begin);
-	return (1);
-}
-
-int	turn_action(t_data *philo)
-{
-	get_program_timer(philo);
-	is_thinking(philo, 0);
-	while (philo->count_eat)
-	{
-		if (is_eating(philo))
-		{
-			if (philo->count_eat > 0)
-				(philo->count_eat)--;
-			if (is_sleeping(philo))
-				is_thinking(philo, 1);
-		}
-	}
-	// exit(1);
-	return (1);
-}
-
-int	free_philos(t_philos *philo)
-{
-	int i;
-
-	i = 0;
-	while (i < philo->total_philos)
-	{
-		sem_close(philo->philos[i].sem_timer);
-		sem_close(philo->philos[i].sem_timer_parent);
-		sem_unlink(philo->philos[i].str_parent);
-		sem_unlink(philo->philos[i].str_child);
-		free(philo->philos[i].str_child);
-		free(philo->philos[i].str_parent);
-		i++;
-	}
-	sem_close(philo->sem_died_parent);
-	sem_close(philo->sem_forks);
-	sem_close(philo->sem_begin_all);
-	sem_unlink("/sem_died");
-	sem_unlink("/sem_forks_all");
-	sem_unlink("/sem_sem_begin_all");
-
-	free(philo->arr_pid);
-	free(philo->philos);
-	// sem_unlink("/sem_printer");
-	// free(philo->sem_died_parent);
-	// free(philo->philos);
-	return (1);
-}
-
-int	annonce_death(t_philos *philo, int pos)
-{
-	int	i;
-
-	i = 0;
-	is_dying(&philo->philos[pos]);
-	while (i < philo->total_philos)
-	{
-		kill(philo->arr_pid[i], SIGKILL);
-		sem_post(philo->philos[i].sem_timer);
-		sem_post(philo->philos[i].sem_timer_parent);
-		i++;
-	}
-	return (1);
-}
-
-
-int	watcher_action(t_philos *philo)
-{
-	int	i;
-
-	i = 0;
-	while (!philo->dead)
-	{
-		// usleep(1000);
-		sem_wait(philo->philos[i].sem_timer_parent);
-		if (philo->philos[i].count_eat)
-		{
-			sem_post(philo->philos[i].sem_timer_parent);
-			if (!compare_time(&philo->philos[i]))
-				return (annonce_death(philo, i));
-		}
-		else
-			return(sem_post(philo->philos[i].sem_timer_parent), 1);
-		if (i < philo->total_philos - 1)
-			i++;
-		else
-			i = 0;
-	}
-	return (1);
-}
-
-int	process_routine(t_data *philo)
-{
-	sem_wait(philo->sem_timer_parent);	
-	philo->timer = ft_get_utime();
-	sem_post(philo->sem_timer_parent);
-	philo->program_timer = ft_get_utime();
-	while (philo->count_eat)
-	{
-		sem_wait(philo->sem_timer);
-		philo->timer = ft_get_utime();
-		sem_wait(philo->sem_timer_parent);
-		if (philo->count_eat > 0)
-			philo->count_eat--;
-		sem_post(philo->sem_timer_parent);
-		if (*philo->is_dead)
-			return (0);
-	}
-	return (1);
-}
-
-int	create_watchers(t_philos *philo)
-{
-	int	i;
-
-	i = 0;
-	while (i < philo->total_philos)
-	{
-		pthread_create(&philo->philos[i].thread_philo, NULL, (void *)process_routine, (void *)&philo->philos[i]);
-		i++;
-	}
-	pthread_create(&philo->watcher, NULL, (void *)watcher_action, (void *)philo);
-	sem_post(philo->sem_begin_all);
-	return (1);
-}
-
-int	waiting_threads(t_philos philo)
-{
-	int i;
-
-	i = 0;
-	create_watchers(&philo);
-	while (i < philo.total_philos)
-	{
-		pthread_join(philo.philos[i].thread_philo, NULL);
-		waitpid(philo.arr_pid[i], NULL, 0);
-		i++;
-	}
-	pthread_join(philo.watcher, NULL);
-	// must this function be checked in mandatory and bonus why it is her
-	free_philos(&philo);
-	return (1);
-}
-
-int	run_simulation(t_philos philo) // main
-{
-	int i;
 	int	pid_cpy;
 
 	i = 0;
@@ -514,7 +71,7 @@ int	run_simulation(t_philos philo) // main
 	return (1);
 }
 
-int	main(int ac, char **av) // main
+int	main(int ac, char **av)
 {
 	t_philos	philo;
 
@@ -522,7 +79,5 @@ int	main(int ac, char **av) // main
 	{
 		if (get_philos_data(&philo, av + 1))
 			run_simulation(philo);
-		// printf("salina\n");
-		// system("leaks philo_bonus");
 	}
 }
