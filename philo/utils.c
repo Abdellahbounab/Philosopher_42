@@ -69,9 +69,9 @@ static int	get_philo_args(t_philos *philo, int *condition, int ids, char **av)
 	*condition = -1;
 	if (av[3])
 		*condition = ft_atoi(av[3]);
+	philo->philos[ids - 1].print = philo->print_parent;
 	philo->all_eat[ids - 1] = *condition;
 	philo->philos[ids - 1].fork_mine = ids;
-	philo->philos[ids - 1].print = 1;
 	philo->philos[ids - 1].is_dead = &philo->dead;
 	if (update_mutex(philo, ids - 1))
 		return (1);
@@ -100,6 +100,8 @@ int	get_philos_data(t_philos *philo, char **av)
 	if (!param_is_correct(av))
 		return (0);
 	philo->philos = (t_data *)malloc(sizeof(t_data) * philo->total_philos);
+	philo->print_parent = malloc (sizeof(int));//must be protected
+	*philo->print_parent = 1;
 	philo->dead = 0;
 	philo->time_begin = ft_get_utime();
 	philo->all_eat = malloc(sizeof(int) * philo->total_philos);

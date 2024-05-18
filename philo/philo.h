@@ -36,7 +36,7 @@ typedef struct s_data
 	long long		*program_timer;
 	long long		timer;
 
-	int				print;
+	int				*print;
 
 	pthread_mutex_t	*fork_mutex_other;
 	pthread_mutex_t	*mutex_died;
@@ -53,6 +53,7 @@ typedef struct s_philos
 	int				*all_eat;
 	int				total_philos;
 	int				dead;
+	int				*print_parent;
 	long long		time_begin;
 	int				condition_eat;
 
@@ -81,6 +82,6 @@ int					philo_is_died(t_data *philo);
 int					ft_printer(t_data *philo, char *str);
 int					get_other_mutex(t_philos *philo);
 int					free_philos(t_philos *philo);
-int					check_printer(t_data *philo);
+int					get_lock(t_data *philo);
 
 #endif

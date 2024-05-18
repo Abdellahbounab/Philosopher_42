@@ -24,13 +24,13 @@ int	philo_is_died(t_data *philo)
 	return (i);
 }
 
-int	check_printer(t_data *philo)
+int	get_lock(t_data *philo)
 {
 	int	i;
 
 	i = 0;
 	pthread_mutex_lock(philo->mutex_printer);
-	if (philo->print)
+	if (*philo->print)
 		i = 1;
 	pthread_mutex_unlock(philo->mutex_printer);
 	return (i);
@@ -38,15 +38,14 @@ int	check_printer(t_data *philo)
 
 int	ft_printer(t_data *philo, char *str)
 {
-	if (check_printer(philo))
-	{
-		pthread_mutex_lock(philo->mutex_printer);
+	pthread_mutex_lock(philo->mutex_printer);
+	if (*philo->print)
 		printf("%lld %d %s\n", ((ft_get_utime() - *philo->program_timer)),
 			philo->id, str);
-		pthread_mutex_unlock(philo->mutex_printer);
-		return (1);
-	}
-	return (0);
+	else
+		return (pthread_mutex_unlock(philo->mutex_printer), 0);
+	pthread_mutex_unlock(philo->mutex_printer);
+	return (1);
 }
 
 int	get_other_mutex(t_philos *philo)

@@ -31,7 +31,7 @@ void	ft_usleep(t_data *philo, long long timer)
 	long long	val;
 
 	val = ft_get_utime() * 1000;
-	while (ft_get_utime() * 1000 < val + timer && check_printer(philo))
+	while (ft_get_utime() * 1000 < val + timer && get_lock(philo))
 		usleep(70);
 }
 

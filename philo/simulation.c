@@ -70,6 +70,7 @@ static int	is_eating(t_data *philo)
 			pthread_mutex_unlock(philo->fork_mutex_mine),
 			0);
 	}
+	pthread_mutex_unlock(philo->fork_mutex_mine);
 	return (0);
 }
 

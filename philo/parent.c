@@ -29,16 +29,9 @@ int	is_dying(t_data *philo)
 
 static int	annonce_death(t_philos *philo)
 {
-	int	i;
-
-	i = 0;
-	while (i < philo->total_philos)
-	{
-		pthread_mutex_lock(philo->philos[i].mutex_printer);
-		philo->philos[i].print = 0;
-		pthread_mutex_unlock(philo->philos[i].mutex_printer);
-		i++;
-	}
+	pthread_mutex_lock(philo->mutex_print_parent);
+	*philo->print_parent = 0;
+	pthread_mutex_unlock(philo->mutex_print_parent);
 	return (1);
 }
 
