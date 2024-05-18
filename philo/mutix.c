@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/16 14:35:36 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/17 19:00:29 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/18 19:58:28 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,11 +77,11 @@ int	free_philos(t_philos *philo)
 		free(philo->philos[i].mutex_timer);
 		pthread_mutex_destroy(philo->philos[i].mutex_eat);
 		free(philo->philos[i].mutex_eat);
-		pthread_mutex_destroy(philo->philos[i].mutex_printer);
-		free(philo->philos[i].mutex_printer);
 		i++;
 	}
 	pthread_mutex_destroy(philo->mutex_died_parent);
+	pthread_mutex_destroy(philo->mutex_print_parent);
+	free(philo->mutex_print_parent);
 	free(philo->mutex_died_parent);
 	free(philo->philos);
 	return (1);

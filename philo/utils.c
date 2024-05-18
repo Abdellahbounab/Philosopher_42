@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/16 14:38:29 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/17 19:01:50 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/18 19:57:09 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ static int	update_mutex(t_philos *philo, int i)
 	philo->philos[i].fork_mutex_mine = malloc(sizeof(pthread_mutex_t));
 	philo->philos[i].mutex_timer = malloc(sizeof(pthread_mutex_t));
 	philo->philos[i].mutex_eat = malloc(sizeof(pthread_mutex_t));
-	philo->philos[i].mutex_printer = malloc(sizeof(pthread_mutex_t));
+	philo->philos[i].mutex_printer = philo->mutex_print_parent;
 	if (!philo->philos[i].fork_mutex_mine || !philo->philos[i].mutex_timer
 		|| !philo->philos[i].mutex_eat || !philo->philos[i].mutex_printer)
 		return (0);
@@ -106,7 +106,9 @@ int	get_philos_data(t_philos *philo, char **av)
 	if (!philo->all_eat)
 		return (free(philo->philos), 0);
 	philo->mutex_died_parent = malloc(sizeof(pthread_mutex_t));
+	philo->mutex_print_parent = malloc(sizeof(pthread_mutex_t));
 	pthread_mutex_init(philo->mutex_died_parent, NULL);
+	pthread_mutex_init(philo->mutex_print_parent, NULL);
 	while (i < philo->total_philos)
 	{
 		if (!get_philo_args(philo, &philo->condition_eat, i + 1, av + 1))

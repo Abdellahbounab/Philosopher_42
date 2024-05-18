@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/11 12:37:21 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/17 18:55:38 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/18 19:51:31 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ static int	get_philos_data(t_philos *philo, char **av)
 		return (0);
 	philo->philos = malloc(sizeof(t_data) * philo->total_philos);
 	philo->dead = 0;
+	philo->time_begin = malloc (sizeof(long long));
 	philo->arr_pid = malloc(sizeof(int) * philo->total_philos);
 	sem_unlink("/sem_died");
 	sem_unlink("/sem_forks_all");
@@ -58,11 +59,15 @@ static int	run_simulation(t_philos philo)
 
 	i = 0;
 	pid_cpy = 0;
+	*philo.time_begin = ft_get_utime();
 	while (i < philo.total_philos)
 	{
 		pid_cpy = fork();
 		if (!pid_cpy)
-			return (turn_action(&philo.philos[i]));
+		{
+			return (philo.philos[i].timer = *philo.time_begin, 
+				turn_action(&philo.philos[i]));
+		}
 		else
 			philo.arr_pid[i] = pid_cpy;
 		i++;

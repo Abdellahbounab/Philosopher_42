@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/17 17:26:16 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/17 18:59:17 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/18 18:48:49 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,6 @@
 int	get_program_timer(t_data *philo)
 {
 	sem_wait(philo->sem_begin);
-	philo->timer = ft_get_utime();
-	philo->program_timer = ft_get_utime();
 	sem_post(philo->sem_begin);
 	return (1);
 }
@@ -29,7 +27,7 @@ int	is_dying(t_data *philo)
 	{
 		*philo->is_dead = philo->id;
 		printf("%s%lld %d died%s\n", RED, ((ft_get_utime()
-					- philo->program_timer)), philo->id, DEFAULT);
+					- *philo->program_timer)), philo->id, DEFAULT);
 	}
 	return (1);
 }
@@ -39,7 +37,6 @@ int	thread_routine(t_data *philo)
 	sem_wait(philo->sem_timer_parent);
 	philo->timer = ft_get_utime();
 	sem_post(philo->sem_timer_parent);
-	philo->program_timer = ft_get_utime();
 	while (philo->count_eat)
 	{
 		sem_wait(philo->sem_timer);

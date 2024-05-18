@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/17 17:08:31 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/17 18:59:30 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/18 19:53:32 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ int	get_philo_args(t_philos *philo, int *condition, int ids, char **av)
 	philo->philos[ids - 1].t_sleep = ft_atoi(av[2]);
 	philo->philos[ids - 1].n_philos = philo->total_philos;
 	philo->philos[ids - 1].is_dead = &philo->dead;
+	philo->philos[ids - 1].program_timer = philo->time_begin;
 	philo->philos[ids - 1].sem_forks_checker = philo->sem_forks;
 	philo->philos[ids - 1].sem_print = philo->sem_printer_parent;
 	philo->philos[ids - 1].sem_died = philo->sem_died_parent;
@@ -31,14 +32,13 @@ int	get_philo_args(t_philos *philo, int *condition, int ids, char **av)
 	philo->philos[ids - 1].str_parent = ft_strjoin("/sem_timer_parent", id_str);
 	sem_unlink(philo->philos[ids - 1].str_parent);
 	sem_unlink(philo->philos[ids - 1].str_child);
-	philo->philos[ids - 1].sem_timer_parent = sem_open(philo->philos[ids
-			- 1].str_parent, O_CREAT, 0640, 1);
-	philo->philos[ids - 1].sem_timer = sem_open(philo->philos[ids
-			- 1].str_child, O_CREAT, 0640, 0);
-	free(id_str);
+	philo->philos[ids - 1].sem_timer_parent = sem_open(philo->philos
+		[ids - 1].str_parent, O_CREAT, 0640, 1);
+	philo->philos[ids - 1].sem_timer = sem_open(philo->philos
+		[ids - 1].str_child, O_CREAT, 0640, 0);
 	if (av[3])
 		*condition = ft_atoi(av[3]);
-	return (philo->philos[ids - 1].count_eat = *condition, 1);
+	return (free(id_str), philo->philos[ids - 1].count_eat = *condition, 1);
 }
 
 int	free_philos(t_philos *philo)
@@ -61,5 +61,6 @@ int	free_philos(t_philos *philo)
 	sem_close(philo->sem_begin_all);
 	free(philo->arr_pid);
 	free(philo->philos);
+	free(philo->time_begin);
 	return (1);
 }

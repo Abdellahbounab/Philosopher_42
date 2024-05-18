@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/28 19:50:54 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/17 19:02:33 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/18 20:00:31 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,14 +57,11 @@ typedef struct s_philos
 	int				condition_eat;
 
 	pthread_mutex_t	*mutex_died_parent;
+	pthread_mutex_t	*mutex_print_parent;
 	t_data			*philos;
 }					t_philos;
 
-# define GREEN "\033[32m"
-
 # define RED "\033[31m"
-
-# define BLUE "\033[34m"
 
 # define DEFAULT "\033[0m"
 

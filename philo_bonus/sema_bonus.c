@@ -6,7 +6,7 @@
 /*   By: abounab <abounab@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/17 17:08:56 by abounab           #+#    #+#             */
-/*   Updated: 2024/05/17 18:57:09 by abounab          ###   ########.fr       */
+/*   Updated: 2024/05/18 19:52:12 by abounab          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ int	ft_printer(t_data *philo, char *str)
 {
 	if (!philo_is_died(philo))
 		return (sem_wait(philo->sem_print), printf("%lld %d %s\n",
-				((ft_get_utime() - philo->program_timer)), philo->id, str),
+				(ft_get_utime() - (*philo->program_timer)), philo->id, str),
 			sem_post(philo->sem_print), 1);
 	return (0);
 }
