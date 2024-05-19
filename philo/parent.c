@@ -27,12 +27,14 @@ int	is_dying(t_data *philo)
 	return (0);
 }
 
-static int	annonce_death(t_philos *philo)
+static int	annonce_death(t_philos *philo, int pos)
 {
 	pthread_mutex_lock(philo->mutex_print_parent);
 	*philo->print_parent = 0;
+	is_dying(&philo->philos[pos]);
+	usleep(100);
 	pthread_mutex_unlock(philo->mutex_print_parent);
-	return (1);
+	return (0);
 }
 
 int	watcher_action(t_philos *philo)
@@ -47,7 +49,7 @@ int	watcher_action(t_philos *philo)
 		{
 			pthread_mutex_unlock(philo->philos[i].mutex_eat);
 			if (!compare_time(&philo->philos[i]))
-				return (annonce_death(philo), is_dying(&philo->philos[i]));
+				return (annonce_death(philo, i));
 		}
 		else
 			pthread_mutex_unlock(philo->philos[i].mutex_eat);
